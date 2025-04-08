@@ -85,22 +85,22 @@ const routes = [
 
 function Router() {
   const { user } = useAuth();
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   
   // Redirect to appropriate page based on role when accessing root
   useEffect(() => {
     if (location === "/" && user) {
       if (user.role === "player") {
-        window.location.href = "/player/booking";
+        setLocation("/player/booking");
       } else if (user.role === "employee") {
-        window.location.href = "/employee/dashboard";
+        setLocation("/employee/dashboard");
       } else if (user.role === "supervisor") {
-        window.location.href = "/supervisor/dashboard";
+        setLocation("/supervisor/dashboard");
       }
     } else if (location === "/" && !user) {
-      window.location.href = "/login";
+      setLocation("/login");
     }
-  }, [location, user]);
+  }, [location, user, setLocation]);
   
   return (
     <Switch>
