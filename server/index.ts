@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { storage, DatabaseStorage } from "./storage";
 
 const app = express();
 app.use(express.json());
@@ -37,6 +38,16 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Seed initial task templates
+  try {
+    if (storage instanceof DatabaseStorage) {
+      await (storage as DatabaseStorage).seedTaskTemplates();
+      log("Task templates seeded successfully");
+    }
+  } catch (error) {
+    log(`Error seeding task templates: ${error}`);
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
