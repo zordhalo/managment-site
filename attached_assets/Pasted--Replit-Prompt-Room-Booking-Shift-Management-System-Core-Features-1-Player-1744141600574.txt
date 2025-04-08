@@ -1,0 +1,106 @@
+## 🌟 Replit Prompt: Room Booking & Shift Management System
+
+### 🎯 **Core Features**
+1. **Player Booking Portal**
+   - Calendar view with room availability
+   - Time slot selection (1-2 hour increments)
+   - Booking confirmation with QR code
+   - Email/SMS notifications
+
+2. **Supervisor Dashboard** 🔒
+   - Approve/reject bookings
+   - Assign staff to shifts
+   - Real-time room occupancy view
+   - Conflict resolution interface
+
+3. **Employee Task System** 👥
+   - Shift checklist with:
+     - Computer organization
+     - Game updates
+     - Equipment checks
+     - Cleaning verification
+   - Progress saving & completion reports
+
+### 💻 **Tech Stack**
+{
+"Frontend": "React + Material-UI",
+"Backend": "Node.js/Express",
+"Database": "MongoDB (Replit DB)",
+"Auth": "JWT + Role-based access",
+"Additional": "QR-code-generator, FullCalendar.io"
+}
+
+text
+
+### 📁 **Database Models**
+// Sample Room Schema
+{
+name: "VR Arena 1",
+capacity: 6,
+equipment: ["HTC Vive", "Valve Index"],
+hourlyRate: 45
+}
+
+// Shift Assignment Schema
+{
+employee: ObjectId,
+room: ObjectId,
+date: ISODate,
+tasksCompleted: [String]
+}
+
+text
+
+### 📡 **Key API Endpoints**
+POST /api/bookings ➔ Create booking
+PUT /api/shifts/:id ➔ Update shift assignments
+GET /api/tasks/current ➔ Get employee's active tasks
+POST /api/checklist ➔ Submit completed tasks
+
+text
+
+### 🖥️ **UI Components**
+1. **Booking Flow**
+   - Room comparison carousel
+   - Interactive time grid
+   - Payment integration (Stripe/PayPal)
+
+2. **Admin Panel**
+   - Drag-and-drop shift scheduler
+   - Booking approval queue
+   - Employee performance metrics
+
+3. **Employee View**
+   - Daily task kanban board
+   - Shift history with completion stats
+   - Issue reporting system
+
+### 🚀 **Replit-Specific Setup**
+.replit configuration
+run = "npm run dev"
+[nix]
+channel = "stable-22_11"
+
+Replit Database Setup
+const Database = require('@replit/database')
+const db = new Database()
+
+text
+
+### 📋 **Testing Instructions**
+1. Seed database with 5 sample rooms
+2. Create test accounts for:
+   - Player (booking@test.com)
+   - Employee (staff@test.com)
+   - Supervisor (admin@test.com)
+3. Test full booking → approval → shift assignment → task completion flow
+
+💡 **Pro Tip:** Use Postman collections to test API endpoints before UI implementation!
+
+### 🌈 **Bonus Challenges**
+- Add real-time chat between staff
+- Implement equipment maintenance tracking
+- Create heatmaps of popular booking times
+- Add AR room preview using Model Viewer
+
+[📎 Click to remix template](https://replit.com/templates)
