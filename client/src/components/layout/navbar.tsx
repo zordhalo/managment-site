@@ -1,39 +1,39 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  Button, 
-  IconButton, 
-  Avatar, 
-  Badge, 
-  Menu, 
-  MenuItem, 
-  Drawer, 
-  List, 
-  ListItem, 
-  ListItemText, 
-  ListItemIcon, 
-  Box, 
-  Divider,
-  Container
-} from "@mui/material";
-import { 
-  Menu as MenuIcon, 
-  Notifications as NotificationsIcon,
-  SportsEsports as SportsEsportsIcon,
-  Dashboard as DashboardIcon,
-  Event as EventIcon,
-  Person as PersonIcon,
-  ExitToApp as ExitToAppIcon,
-  Room as RoomIcon,
-  Task as TaskIcon,
-  Schedule as ScheduleIcon
-} from "@mui/icons-material";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
+
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { 
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuItem
+} from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger
+} from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+
+import { 
+  Menu, 
+  Bell,
+  LayoutDashboard,
+  Calendar,
+  User,
+  LogOut,
+  MonitorPlay,
+  CheckSquare,
+  Clock
+} from "lucide-react";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -79,21 +79,21 @@ export default function Navbar() {
     switch (user.role) {
       case "player":
         return [
-          { path: "/player/booking", label: "Book a Room", icon: <RoomIcon /> },
-          { path: "/player/mybookings", label: "My Bookings", icon: <EventIcon /> },
+          { path: "/player/booking", label: "Book a Room", icon: <MonitorPlay className="h-4 w-4 mr-2" /> },
+          { path: "/player/mybookings", label: "My Bookings", icon: <Calendar className="h-4 w-4 mr-2" /> },
         ];
       case "employee":
         return [
-          { path: "/employee/dashboard", label: "Dashboard", icon: <DashboardIcon /> },
-          { path: "/employee/myshifts", label: "My Shifts", icon: <ScheduleIcon /> },
-          { path: "/employee/tasks", label: "Tasks", icon: <TaskIcon /> },
+          { path: "/employee/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4 mr-2" /> },
+          { path: "/employee/myshifts", label: "My Shifts", icon: <Clock className="h-4 w-4 mr-2" /> },
+          { path: "/employee/tasks", label: "Tasks", icon: <CheckSquare className="h-4 w-4 mr-2" /> },
         ];
       case "supervisor":
         return [
-          { path: "/supervisor/dashboard", label: "Dashboard", icon: <DashboardIcon /> },
-          { path: "/supervisor/bookings", label: "Bookings", icon: <EventIcon /> },
-          { path: "/supervisor/shifts", label: "Shifts", icon: <ScheduleIcon /> },
-          { path: "/supervisor/rooms", label: "Rooms", icon: <RoomIcon /> },
+          { path: "/supervisor/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4 mr-2" /> },
+          { path: "/supervisor/bookings", label: "Bookings", icon: <Calendar className="h-4 w-4 mr-2" /> },
+          { path: "/supervisor/shifts", label: "Shifts", icon: <Clock className="h-4 w-4 mr-2" /> },
+          { path: "/supervisor/rooms", label: "Rooms", icon: <MonitorPlay className="h-4 w-4 mr-2" /> },
         ];
       default:
         return [];
@@ -101,157 +101,111 @@ export default function Navbar() {
   };
   
   const navLinks = getNavigationLinks();
-  
-  const drawer = (
-    <div>
-      <Toolbar>
-        <SportsEsportsIcon sx={{ mr: 1 }} />
-        <Typography variant="h6" noWrap>
-          GameRoomPro
-        </Typography>
-      </Toolbar>
-      <Divider />
-      <List>
-        {navLinks.map((link) => (
-          <ListItem 
-            key={link.path} 
-            component={Link} 
-            href={link.path}
-            selected={location === link.path}
-            onClick={handleDrawerToggle}
-            sx={{ cursor: 'pointer' }}
-          >
-            <ListItemIcon>
-              {link.icon}
-            </ListItemIcon>
-            <ListItemText primary={link.label} />
-          </ListItem>
-        ))}
-      </List>
-    </div>
-  );
+  const isMobile = useIsMobile();
   
   if (!user) return null;
   
   return (
     <>
-      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-        <Container maxWidth="xl">
-          <Toolbar>
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              edge="start"
-              onClick={handleDrawerToggle}
-              sx={{ mr: 2, display: { sm: 'none' } }}
-            >
-              <MenuIcon />
-            </IconButton>
-            
-            <SportsEsportsIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
-            <Typography
-              variant="h6"
-              noWrap
-              component={Link}
-              href="/"
-              sx={{
-                mr: 2,
-                display: { xs: 'none', md: 'flex' },
-                fontWeight: 700,
-                color: 'inherit',
-                textDecoration: 'none',
-              }}
-            >
-              GameRoomPro
-            </Typography>
-            
-            <Box sx={{ display: { xs: 'none', md: 'flex' }, flexGrow: 1 }}>
+      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center">
+          <div className="mr-4 hidden md:flex">
+            <Link href="/" className="mr-6 flex items-center space-x-2">
+              <MonitorPlay className="h-6 w-6" />
+              <span className="font-bold text-xl">GameRoomPro</span>
+            </Link>
+            <nav className="flex items-center space-x-6 text-sm font-medium">
               {navLinks.map((link) => (
-                <Button
-                  key={link.path}
-                  component={Link}
+                <Link 
+                  key={link.path} 
                   href={link.path}
-                  color="inherit"
-                  sx={{ 
-                    mx: 1,
-                    borderBottom: location === link.path ? 2 : 0,
-                    borderRadius: 0,
-                    pb: 0.5
-                  }}
+                  className={`flex items-center transition-colors hover:text-primary ${location === link.path ? 'text-primary' : 'text-foreground/60'}`}
                 >
+                  {link.icon}
                   {link.label}
-                </Button>
+                </Link>
               ))}
-            </Box>
+            </nav>
+          </div>
+          
+          <div className="flex flex-1 items-center justify-between md:justify-end space-x-2">
+            <div className="w-full flex-1 md:w-auto md:flex-none">
+              {isMobile && (
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon" className="md:hidden">
+                      <Menu className="h-5 w-5" />
+                      <span className="sr-only">Toggle menu</span>
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="pr-0">
+                    <Link href="/" className="flex items-center space-x-2">
+                      <MonitorPlay className="h-6 w-6" />
+                      <span className="font-bold">GameRoomPro</span>
+                    </Link>
+                    <Separator className="my-4" />
+                    <div className="grid gap-2 py-4">
+                      {navLinks.map((link) => (
+                        <Link 
+                          key={link.path} 
+                          href={link.path}
+                          className={`flex w-full items-center py-2 text-sm font-medium ${location === link.path ? 'text-primary' : 'text-muted-foreground'}`}
+                        >
+                          {link.icon}
+                          {link.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              )}
+            </div>
             
-            <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }} />
-            
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <IconButton size="large" color="inherit">
-                <Badge badgeContent={unreadNotifications.length} color="error">
-                  <NotificationsIcon />
-                </Badge>
-              </IconButton>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-5 w-5" />
+                {unreadNotifications.length > 0 && (
+                  <span className="absolute top-1 right-1 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                  </span>
+                )}
+              </Button>
               
-              <Box
-                sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  cursor: 'pointer', 
-                  ml: 2 
-                }}
-                onClick={handleProfileMenuOpen}
-              >
-                <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
-                  {user.fullName.charAt(0)}
-                </Avatar>
-                <Typography variant="body2" sx={{ ml: 1, display: { xs: 'none', sm: 'block' } }}>
-                  {user.fullName}
-                </Typography>
-              </Box>
-            </Box>
-          </Toolbar>
-        </Container>
-      </AppBar>
-      
-      <Box component="nav">
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{ keepMounted: true }}
-          sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { width: 240 },
-          }}
-        >
-          {drawer}
-        </Drawer>
-      </Box>
-      
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-      >
-        <MenuItem component={Link} href="/profile" onClick={handleMenuClose}>
-          <ListItemIcon>
-            <PersonIcon fontSize="small" />
-          </ListItemIcon>
-          Profile
-        </MenuItem>
-        <MenuItem onClick={handleLogout}>
-          <ListItemIcon>
-            <ExitToAppIcon fontSize="small" />
-          </ListItemIcon>
-          Logout
-        </MenuItem>
-      </Menu>
-      
-      {/* Add Toolbar to push content below app bar */}
-      <Toolbar />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full" size="icon">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {user.fullName.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user.fullName}</p>
+                      <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="cursor-pointer">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   );
 }

@@ -2,7 +2,6 @@ import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import { ThemeProvider, createTheme, CssBaseline, Container } from "@mui/material";
 import Navbar from "@/components/layout/navbar";
 import NotFound from "@/pages/not-found";
 
@@ -30,35 +29,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 
-// Define theme
-const theme = createTheme({
-  palette: {
-    primary: {
-      light: '#42a5f5',
-      main: '#1976d2',
-      dark: '#1565c0',
-      contrastText: '#fff',
-    },
-    secondary: {
-      light: '#4db6ac',
-      main: '#009688',
-      dark: '#00796b',
-      contrastText: '#fff',
-    },
-  },
-  typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: 'none',
-        },
-      },
-    },
-  },
-});
+// Theme is now managed through theme.json and tailwind
 
 // Private Route Component
 const PrivateRoute = ({ component: Component, roles = [], ...rest }: any) => {
@@ -154,14 +125,11 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Navbar />
-        <Container maxWidth="xl" sx={{ py: 3 }}>
-          <Router />
-        </Container>
-        <Toaster />
-      </ThemeProvider>
+      <Navbar />
+      <div className="container mx-auto py-6 px-4">
+        <Router />
+      </div>
+      <Toaster />
     </QueryClientProvider>
   );
 }
