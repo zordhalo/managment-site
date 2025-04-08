@@ -15,6 +15,7 @@ import PlayerBookingPage from "@/pages/player/booking";
 import PlayerMyBookingsPage from "@/pages/player/mybookings";
 
 // Employee pages
+import EmployeeDashboardPage from "@/pages/employee/dashboard";
 import EmployeeMyShiftsPage from "@/pages/employee/myshifts";
 import EmployeeTasksPage from "@/pages/employee/tasks";
 
@@ -77,7 +78,7 @@ const PrivateRoute = ({ component: Component, roles = [], ...rest }: any) => {
       if (user.role === "player") {
         setLocation("/player/booking");
       } else if (user.role === "employee") {
-        setLocation("/employee/tasks");
+        setLocation("/employee/dashboard");
       } else if (user.role === "supervisor") {
         setLocation("/supervisor/dashboard");
       }
@@ -100,6 +101,7 @@ const routes = [
   { path: "/player/mybookings", component: PlayerMyBookingsPage, roles: ["player"] },
   
   // Employee routes
+  { path: "/employee/dashboard", component: EmployeeDashboardPage, roles: ["employee"] },
   { path: "/employee/myshifts", component: EmployeeMyShiftsPage, roles: ["employee"] },
   { path: "/employee/tasks", component: EmployeeTasksPage, roles: ["employee"] },
   
@@ -120,7 +122,7 @@ function Router() {
       if (user.role === "player") {
         window.location.href = "/player/booking";
       } else if (user.role === "employee") {
-        window.location.href = "/employee/tasks";
+        window.location.href = "/employee/dashboard";
       } else if (user.role === "supervisor") {
         window.location.href = "/supervisor/dashboard";
       }

@@ -84,6 +84,7 @@ export default function Navbar() {
         ];
       case "employee":
         return [
+          { path: "/employee/dashboard", label: "Dashboard", icon: <DashboardIcon /> },
           { path: "/employee/myshifts", label: "My Shifts", icon: <ScheduleIcon /> },
           { path: "/employee/tasks", label: "Tasks", icon: <TaskIcon /> },
         ];
