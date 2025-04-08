@@ -1,24 +1,13 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { 
-  Container, 
-  Box, 
-  Typography, 
-  TextField, 
-  Button, 
-  Paper, 
-  Avatar, 
-  Grid,
-  InputAdornment,
-  IconButton
-} from "@mui/material";
-import { 
-  SportsEsports as SportsEsportsIcon,
-  Visibility as VisibilityIcon,
-  VisibilityOff as VisibilityOffIcon
-} from "@mui/icons-material";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Eye, EyeOff, MonitorPlay } from "lucide-react";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -70,113 +59,94 @@ export default function LoginPage() {
   };
   
   return (
-    <Container maxWidth="sm">
-      <Box
-        sx={{
-          mt: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Paper 
-          elevation={3}
-          sx={{
-            p: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            width: '100%',
-          }}
-        >
-          <Avatar sx={{ m: 1, bgcolor: 'primary.main' }}>
-            <SportsEsportsIcon />
-          </Avatar>
-          <Typography component="h1" variant="h5">
-            Sign in to GameRoomPro
-          </Typography>
-          
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3, width: '100%' }}>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="username"
-              label="Username"
-              name="username"
-              autoComplete="username"
-              autoFocus
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              error={!!errors.username}
-              helperText={errors.username}
-            />
-            
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Password"
-              type={showPassword ? 'text' : 'password'}
-              id="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              error={!!errors.password}
-              helperText={errors.password}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="toggle password visibility"
+    <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
+      <div className="w-full max-w-md">
+        <Card className="w-full">
+          <CardHeader className="space-y-1 flex flex-col items-center">
+            <div className="bg-primary/10 p-3 rounded-full">
+              <MonitorPlay className="h-6 w-6 text-primary" />
+            </div>
+            <CardTitle className="text-2xl font-bold">Sign in</CardTitle>
+            <CardDescription>
+              Enter your credentials to access your account
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit}>
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    name="username"
+                    placeholder="Enter your username"
+                    autoComplete="username"
+                    autoFocus
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className={errors.username ? "border-destructive" : ""}
+                  />
+                  {errors.username && (
+                    <p className="text-sm text-destructive">{errors.username}</p>
+                  )}
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      placeholder="Enter your password"
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className={errors.password ? "border-destructive pr-10" : "pr-10"}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full px-3"
                       onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
                     >
-                      {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-            
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-              disabled={loading}
-            >
-              {loading ? "Signing in..." : "Sign In"}
-            </Button>
-            
-            <Grid container justifyContent="center">
-              <Grid item>
-                <Link href="/register">
-                  <Typography variant="body2" component="span" sx={{ cursor: 'pointer', color: 'primary.main' }}>
-                    {"Don't have an account? Sign up"}
-                  </Typography>
-                </Link>
-              </Grid>
-            </Grid>
-          </Box>
-        </Paper>
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      <span className="sr-only">
+                        {showPassword ? "Hide password" : "Show password"}
+                      </span>
+                    </Button>
+                  </div>
+                  {errors.password && (
+                    <p className="text-sm text-destructive">{errors.password}</p>
+                  )}
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Signing in..." : "Sign In"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+          <CardFooter className="flex flex-col gap-4">
+            <div className="text-center text-sm">
+              Don't have an account?{" "}
+              <Link href="/register" className="text-primary hover:underline">
+                Sign up
+              </Link>
+            </div>
+          </CardFooter>
+        </Card>
         
-        <Box sx={{ mt: 2 }}>
-          <Typography variant="body2" color="text.secondary" align="center">
-            Demo credentials:
-          </Typography>
-          <Typography variant="body2" color="text.secondary" align="center">
-            Player: username="player", password="password123"
-          </Typography>
-          <Typography variant="body2" color="text.secondary" align="center">
-            Employee: username="staff", password="password123"
-          </Typography>
-          <Typography variant="body2" color="text.secondary" align="center">
-            Supervisor: username="admin", password="password123"
-          </Typography>
-        </Box>
-      </Box>
-    </Container>
+        <div className="mt-6 text-center text-sm text-muted-foreground">
+          <div className="mb-2 font-medium">Demo credentials:</div>
+          <div>Player: username="player", password="password123"</div>
+          <div>Employee: username="staff", password="password123"</div>
+          <div>Supervisor: username="admin", password="password123"</div>
+        </div>
+      </div>
+    </div>
   );
 }
