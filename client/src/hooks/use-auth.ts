@@ -31,7 +31,7 @@ export const useAuth = () => {
       if (response.user.role === "player") {
         setLocation("/player/booking");
       } else if (response.user.role === "employee") {
-        setLocation("/employee/tasks");
+        setLocation("/employee/dashboard");
       } else if (response.user.role === "supervisor") {
         setLocation("/supervisor/dashboard");
       }

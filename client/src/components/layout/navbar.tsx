@@ -44,12 +44,12 @@ export default function Navbar() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   
   // Get notifications
-  const { data: notifications } = useQuery({
+  const { data: notifications = [] } = useQuery<any[]>({
     queryKey: ["/api/notifications"],
     enabled: !!user,
   });
   
-  const unreadNotifications = notifications?.filter(n => !n.isRead) || [];
+  const unreadNotifications = notifications.filter((n: any) => !n.isRead);
   
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -114,12 +114,12 @@ export default function Navbar() {
       <List>
         {navLinks.map((link) => (
           <ListItem 
-            button 
             key={link.path} 
             component={Link} 
             href={link.path}
             selected={location === link.path}
             onClick={handleDrawerToggle}
+            sx={{ cursor: 'pointer' }}
           >
             <ListItemIcon>
               {link.icon}
