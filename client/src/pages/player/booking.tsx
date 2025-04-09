@@ -1,28 +1,19 @@
 import { useState, useEffect } from "react";
-import { 
-  Typography,
-  Box,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Paper,
-  TextField,
-  CircularProgress,
-  Stepper,
-  Step,
-  StepLabel,
-  Grid
-} from "@mui/material";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Room, Booking, RoomFilterOptions, User } from "@/lib/types";
+import { Room, Booking, RoomFilterOptions } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import RoomFilter from "@/components/ui/room-filter";
 import RoomCarousel from "@/components/ui/room-carousel";
 import BookingCalendar from "@/components/ui/booking-calendar";
 import { format } from "date-fns";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Loader2, CalendarCheck, Clock, Monitor, Info } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 export default function PlayerBookingPage() {
   const [activeStep, setActiveStep] = useState(0);
@@ -172,47 +163,70 @@ export default function PlayerBookingPage() {
   
   if (roomsLoading || bookingsLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center items-center h-[50vh]">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
     );
   }
   
   return (
-    <Box>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
-          Book a Gaming Room
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Select a room, date, and time to make your booking
-        </Typography>
-      </Box>
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold">Book the Esports Room</h1>
+        <p className="text-muted-foreground">
+          Select a date and time for your booking
+        </p>
+      </div>
       
-      <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-        {steps.map((label) => (
-          <Step key={label}>
-            <StepLabel>{label}</StepLabel>
-          </Step>
-        ))}
-      </Stepper>
+      <div className="relative">
+        <div className="mb-8">
+          <div className="relative">
+            <div className="absolute top-0 left-0 w-full flex justify-between">
+              {steps.map((step, index) => (
+                <div 
+                  key={index} 
+                  className={`flex flex-col items-center`}
+                  style={{ width: `${100 / steps.length}%` }}
+                >
+                  <div className={`
+                    z-10 flex items-center justify-center w-8 h-8 rounded-full border-2 
+                    ${index <= activeStep ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted border-muted-foreground/20 text-muted-foreground'}
+                  `}>
+                    {index + 1}
+                  </div>
+                  <span className={`mt-2 text-xs ${index <= activeStep ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
+                    {step}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="h-1 w-full bg-muted mt-4">
+              <div 
+                className="h-1 bg-primary transition-all" 
+                style={{ width: `${((activeStep) / (steps.length - 1)) * 100}%` }} 
+              />
+            </div>
+          </div>
+        </div>
+      </div>
       
       {activeStep === 0 && (
         <>
-          <RoomFilter 
-            onFilter={handleFilter} 
-            equipmentOptions={equipmentOptions}
-          />
-          
-          {filteredRooms.length > 0 ? (
+          {/* No filter needed, only showing one room */}
+          {rooms && rooms.length > 0 ? (
             <RoomCarousel 
-              rooms={filteredRooms} 
+              rooms={rooms} 
               onSelectRoom={handleRoomSelect}
             />
           ) : (
-            <Paper sx={{ p: 3, textAlign: 'center' }}>
-              <Typography>No rooms match your filter criteria. Please try different filters.</Typography>
-            </Paper>
+            <Card>
+              <CardContent className="p-6 text-center">
+                <p>No rooms available for booking.</p>
+              </CardContent>
+            </Card>
           )}
         </>
       )}
@@ -226,128 +240,154 @@ export default function PlayerBookingPage() {
       )}
       
       {activeStep === 2 && selectedRoom && startTime && endTime && (
-        <Paper sx={{ p: 3 }}>
-          <Typography variant="h5" gutterBottom>
-            Review Your Booking
-          </Typography>
-          
-          <Grid container spacing={3} sx={{ mt: 1 }}>
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle1" fontWeight="bold">
-                Room Details:
-              </Typography>
-              <Typography>
-                {selectedRoom.name}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Capacity: {selectedRoom.capacity} players
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Equipment: {selectedRoom.equipment.join(', ')}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Rate: ${selectedRoom.hourlyRate}/hour
-              </Typography>
-            </Grid>
+        <Card>
+          <CardHeader>
+            <CardTitle>Review Your Booking</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h3 className="font-semibold flex items-center text-primary">
+                    <Monitor className="mr-2 h-4 w-4" />
+                    Room Details
+                  </h3>
+                  <div className="rounded-md bg-muted p-4 space-y-2">
+                    <h4 className="font-bold">{selectedRoom.name}</h4>
+                    <div className="text-sm text-muted-foreground">
+                      <p>Capacity: Up to {selectedRoom.capacity} players</p>
+                      <p>Equipment: {selectedRoom.equipment.join(', ')}</p>
+                      <div className="mt-2 flex items-center">
+                        <Badge variant="outline" className="bg-primary/10 border-0 text-primary font-medium">
+                          Free for Coaches
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h3 className="font-semibold flex items-center text-primary">
+                    <CalendarCheck className="mr-2 h-4 w-4" />
+                    Booking Time
+                  </h3>
+                  <div className="rounded-md bg-muted p-4 space-y-2">
+                    <h4 className="font-bold">{format(startTime, 'MMMM d, yyyy')}</h4>
+                    <div className="text-sm text-muted-foreground">
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 mr-2" />
+                        <span>{format(startTime, 'h:mm a')} - {format(endTime, 'h:mm a')}</span>
+                      </div>
+                      <p>Duration: 1 hour</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
             
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle1" fontWeight="bold">
-                Booking Time:
-              </Typography>
-              <Typography>
-                {format(startTime, 'MMMM d, yyyy')}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {format(startTime, 'h:mm a')} - {format(endTime, 'h:mm a')}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Duration: 1 hour
-              </Typography>
-              <Typography variant="body2" fontWeight="bold" sx={{ mt: 1 }}>
-                Total: ${selectedRoom.hourlyRate}
-              </Typography>
-            </Grid>
-            
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                label="Special Requests (Optional)"
+            <div className="space-y-2">
+              <h3 className="font-semibold flex items-center">
+                <Info className="mr-2 h-4 w-4" />
+                Special Requests (Optional)
+              </h3>
+              <Textarea
+                placeholder="Any special equipment needs or setup instructions?"
                 value={specialRequests}
                 onChange={(e) => setSpecialRequests(e.target.value)}
-                variant="outlined"
+                className="min-h-[100px]"
               />
-            </Grid>
-          </Grid>
-          
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-            <Button onClick={handleBack}>
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-between border-t p-6">
+            <Button variant="outline" onClick={handleBack}>
               Back
             </Button>
-            <Button 
-              variant="contained" 
-              color="primary"
-              onClick={handleOpenConfirmDialog}
-            >
+            <Button onClick={handleOpenConfirmDialog}>
               Confirm Booking
             </Button>
-          </Box>
-        </Paper>
+          </CardFooter>
+        </Card>
       )}
       
       {/* Confirmation Dialog */}
       <Dialog open={confirmDialogOpen} onClose={handleCloseConfirmDialog}>
-        <DialogTitle>Confirm Your Booking</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to book {selectedRoom?.name} on {startTime && format(startTime, 'MMMM d, yyyy')} from {startTime && format(startTime, 'h:mm a')} to {endTime && format(endTime, 'h:mm a')}?
-          </Typography>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Your Booking</DialogTitle>
+            <DialogDescription>
+              Please review your booking details before confirming.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <p className="mb-2">
+              Are you sure you want to book <span className="font-semibold">{selectedRoom?.name}</span> on:
+            </p>
+            <ul className="list-disc pl-6 space-y-2 text-sm">
+              <li><span className="font-medium">Date:</span> {startTime && format(startTime, 'MMMM d, yyyy')}</li>
+              <li><span className="font-medium">Time:</span> {startTime && format(startTime, 'h:mm a')} to {endTime && format(endTime, 'h:mm a')}</li>
+              <li><span className="font-medium">Fee:</span> <Badge className="ml-1">Free for Coaches</Badge></li>
+            </ul>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCloseConfirmDialog} className="sm:mt-0 mt-2">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleConfirmBooking}
+              disabled={createBookingMutation.isPending}
+            >
+              {createBookingMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : "Confirm"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseConfirmDialog}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleConfirmBooking} 
-            variant="contained" 
-            color="primary"
-            disabled={createBookingMutation.isPending}
-          >
-            {createBookingMutation.isPending ? "Processing..." : "Confirm"}
-          </Button>
-        </DialogActions>
       </Dialog>
       
       {/* Success Dialog */}
       <Dialog open={successDialogOpen} onClose={handleCloseSuccessDialog}>
-        <DialogTitle>Booking Successful!</DialogTitle>
-        <DialogContent>
-          <Box sx={{ textAlign: 'center', py: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Your booking (#{newBookingId}) has been submitted and is pending approval.
-            </Typography>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center">Booking Successful!</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4 flex flex-col items-center">
+            <div className="bg-primary/10 p-3 rounded-full mb-4">
+              <CalendarCheck className="h-6 w-6 text-primary" />
+            </div>
             
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            <p className="text-center mb-4 font-medium">
+              Your booking (#{newBookingId}) has been submitted and is pending approval.
+            </p>
+            
+            <p className="text-sm text-muted-foreground text-center mb-4">
               You will receive a notification once your booking is approved.
-            </Typography>
+            </p>
             
             {qrCode && (
-              <Box sx={{ my: 2 }}>
-                <Typography variant="subtitle1" gutterBottom>
-                  Your Booking QR Code:
-                </Typography>
-                <img src={qrCode} alt="Booking QR Code" style={{ maxWidth: '200px' }} />
-              </Box>
+              <div className="my-4 flex flex-col items-center">
+                <h4 className="font-medium mb-2">Your Booking QR Code:</h4>
+                <div className="border p-2 rounded-md bg-white">
+                  <img src={qrCode} alt="Booking QR Code" className="max-w-[200px]" />
+                </div>
+              </div>
             )}
-          </Box>
+          </div>
+          
+          <DialogFooter>
+            <Button onClick={handleCloseSuccessDialog} className="w-full">
+              Close
+            </Button>
+          </DialogFooter>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseSuccessDialog} variant="contained" color="primary">
-            Close
-          </Button>
-        </DialogActions>
       </Dialog>
-    </Box>
+    </div>
   );
 }
