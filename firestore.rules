@@ -1,0 +1,135 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isUserWithId(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function hasRole(role) {
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return userDoc != null && userDoc.data.role == role;
+    }
+    
+    function isSupervisor() {
+      return hasRole('supervisor');
+    }
+    
+    function isEmployee() {
+      return hasRole('employee');
+    }
+    
+    function isPlayer() {
+      return hasRole('player');
+    }
+    
+    // User profiles
+    match /users/{userId} {
+      // Anyone can read basic user info, but only the user or supervisors can read full profile
+      allow read: if isAuthenticated();
+      // Only the user or supervisors can update profile
+      allow update: if isUserWithId(userId) || isSupervisor();
+      // No direct creation or deletion (handled through Firebase Auth)
+      allow create, delete: if false;
+    }
+    
+    // Rooms collection
+    match /rooms/{roomId} {
+      // Anyone can read room details
+      allow read: if isAuthenticated();
+      // Only supervisors can create, update or delete rooms
+      allow create, update, delete: if isSupervisor();
+    }
+    
+    // Bookings collection
+    match /bookings/{bookingId} {
+      // Players can only see their own bookings
+      // Employees can see bookings for rooms they manage
+      // Supervisors can see all bookings
+      allow read: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || 
+         isEmployee() || 
+         isSupervisor());
+      
+      // Players can create bookings
+      allow create: if isAuthenticated() && 
+                    request.resource.data.userId == request.auth.uid;
+      
+      // Players can only update their own bookings (limited fields)
+      // Supervisors can update any booking
+      allow update: if isAuthenticated() && 
+        ((resource.data.userId == request.auth.uid && 
+          request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['specialRequests', 'status'])) || 
+         isSupervisor());
+      
+      // Only supervisors can delete bookings
+      allow delete: if isSupervisor();
+    }
+    
+    // Shifts collection
+    match /shifts/{shiftId} {
+      // Employees can only see their own shifts
+      // Supervisors can see all shifts
+      allow read: if isAuthenticated() && 
+        (resource.data.employeeId == request.auth.uid || 
+         isSupervisor());
+      
+      // Only supervisors can manage shifts
+      allow create, update, delete: if isSupervisor();
+    }
+    
+    // Tasks collection
+    match /tasks/{taskId} {
+      // Get the shift associated with this task
+      function getTaskShift() {
+        return get(/databases/$(database)/documents/shifts/$(resource.data.shiftId));
+      }
+      
+      // Employees can only see tasks for their shifts
+      // Supervisors can see all tasks
+      allow read: if isAuthenticated() && 
+        (getTaskShift().data.employeeId == request.auth.uid || 
+         isSupervisor());
+      
+      // Only supervisors can create tasks
+      allow create: if isSupervisor();
+      
+      // Employees can update the isCompleted status of their tasks
+      // Supervisors can update any task
+      allow update: if isAuthenticated() && 
+        ((getTaskShift().data.employeeId == request.auth.uid && 
+          request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['isCompleted', 'completedAt'])) || 
+         isSupervisor());
+      
+      // Only supervisors can delete tasks
+      allow delete: if isSupervisor();
+    }
+    
+    // Task templates
+    match /taskTemplates/{templateId} {
+      // Anyone can read task templates
+      allow read: if isAuthenticated();
+      // Only supervisors can manage task templates
+      allow create, update, delete: if isSupervisor();
+    }
+    
+    // Notifications
+    match /notifications/{notificationId} {
+      // Users can only see their own notifications
+      allow read: if isUserWithId(resource.data.userId);
+      // Users can only mark their own notifications as read
+      allow update: if isUserWithId(resource.data.userId) && 
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+      // Only the system can create notifications
+      allow create: if false;  // Handled by Cloud Functions
+      // Users can delete their own notifications
+      allow delete: if isUserWithId(resource.data.userId);
+    }
+  }
+}

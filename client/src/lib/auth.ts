@@ -1,25 +1,24 @@
-import { AuthResponse, User } from "./types";
-import { apiRequest } from "./queryClient";
+import { User } from "./types";
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut,
+  UserCredential
+} from "firebase/auth";
+import { doc, setDoc, getDoc } from "firebase/firestore";
+import { auth, db } from "./firebase";
 
-// Local storage keys
-const TOKEN_KEY = "booking_system_token";
+// Local storage key for user data
 const USER_KEY = "booking_system_user";
 
-// Save auth data to local storage
-export const saveAuth = (data: AuthResponse) => {
-  localStorage.setItem(TOKEN_KEY, data.token);
-  localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+// Save user data to local storage
+export const saveUser = (user: User) => {
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
 };
 
 // Remove auth data from local storage
 export const clearAuth = () => {
-  localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
-};
-
-// Get token from local storage
-export const getToken = (): string | null => {
-  return localStorage.getItem(TOKEN_KEY);
 };
 
 // Get user from local storage
@@ -36,15 +35,33 @@ export const getUser = (): User | null => {
 
 // Check if user is authenticated
 export const isAuthenticated = (): boolean => {
-  return !!getToken() && !!getUser();
+  return auth.currentUser !== null && !!getUser();
 };
 
 // Login
-export const login = async (username: string, password: string): Promise<AuthResponse> => {
-  const response = await apiRequest("POST", "/api/auth/login", { username, password });
-  const data = await response.json();
-  saveAuth(data);
-  return data;
+export const login = async (email: string, password: string): Promise<User> => {
+  const userCredential: UserCredential = await signInWithEmailAndPassword(auth, email, password);
+  
+  // Get additional user data from Firestore
+  const userDocRef = doc(db, "users", userCredential.user.uid);
+  const userDoc = await getDoc(userDocRef);
+  
+  if (!userDoc.exists()) {
+    throw new Error("User data not found");
+  }
+  
+  const userData = userDoc.data();
+  const user: User = {
+    id: userCredential.user.uid,
+    username: userData.username,
+    email: userCredential.user.email || "",
+    fullName: userData.fullName,
+    role: userData.role,
+    phone: userData.phone
+  };
+  
+  saveUser(user);
+  return user;
 };
 
 // Register
@@ -55,15 +72,39 @@ export const register = async (userData: {
   fullName: string;
   phone?: string;
   role: "player" | "employee" | "supervisor";
-}) => {
-  const response = await apiRequest("POST", "/api/auth/register", userData);
-  return response.json();
+}): Promise<User> => {
+  // Create user with email and password
+  const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
+  
+  // Store additional user data in Firestore
+  const userDocRef = doc(db, "users", userCredential.user.uid);
+  const userProfile = {
+    username: userData.username,
+    fullName: userData.fullName,
+    role: userData.role,
+    phone: userData.phone || null,
+    createdAt: new Date()
+  };
+  
+  await setDoc(userDocRef, userProfile);
+  
+  const user: User = {
+    id: userCredential.user.uid,
+    email: userData.email,
+    username: userData.username,
+    fullName: userData.fullName,
+    role: userData.role,
+    phone: userData.phone
+  };
+  
+  return user;
 };
 
 // Logout
-export const logout = () => {
+export const logout = async () => {
+  await signOut(auth);
   clearAuth();
-  // Redirect to login page can be done here or by components using this function
+  // Redirect to login page can be done by components using this function
 };
 
 // Check if user has required role

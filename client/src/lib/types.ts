@@ -1,62 +1,67 @@
 export interface User {
-  id: number;
+  id: string; // Changed to string for Firebase UIDs
   username: string;
   fullName: string;
   email: string;
   role: "player" | "employee" | "supervisor";
   phone?: string;
+  createdAt?: string;
 }
 
 export interface Room {
-  id: number;
+  id: string; // Changed to string for Firestore document IDs
   name: string;
   capacity: number;
   equipment: string[];
   hourlyRate: number;
   description?: string;
   isActive: boolean;
+  createdAt?: string;
 }
 
 export interface Booking {
-  id: number;
-  userId: number;
-  roomId: number;
+  id: string; // Changed to string for Firestore document IDs
+  userId: string; // Changed to string for Firebase UIDs
+  roomId: string; // Changed to string for Firestore document IDs
   startTime: string;
   endTime: string;
   status: "pending" | "approved" | "rejected" | "completed" | "cancelled";
   qrCode?: string;
   createdAt: string;
+  specialRequests?: string;
 }
 
 export interface Shift {
-  id: number;
-  employeeId: number;
-  roomId: number;
+  id: string; // Changed to string for Firestore document IDs
+  employeeId: string; // Changed to string for Firebase UIDs
+  roomId: string; // Changed to string for Firestore document IDs
   date: string;
   startTime: string;
   endTime: string;
   isActive: boolean;
+  createdAt?: string;
 }
 
 export interface Task {
-  id: number;
-  shiftId: number;
+  id: string; // Changed to string for Firestore document IDs
+  shiftId: string; // Changed to string for Firestore document IDs
   name: string;
   category: "computer_organization" | "game_updates" | "equipment_checks" | "cleaning";
   isCompleted: boolean;
   completedAt: string | null;
+  createdAt?: string;
 }
 
 export interface TaskTemplate {
-  id: number;
+  id: string; // Changed to string for Firestore document IDs
   name: string;
   category: "computer_organization" | "game_updates" | "equipment_checks" | "cleaning";
   isDefault: boolean;
 }
 
 export interface Notification {
-  id: number;
-  userId: number;
+  id: string; // Changed to string for Firestore document IDs
+  userId: string; // Changed to string for Firebase UIDs
   message: string;
   type: "booking" | "shift" | "system";
   isRead: boolean;
@@ -76,10 +81,7 @@ export interface RoomFilterOptions {
   priceRange: string | null;
 }
 
-export interface AuthResponse {
-  token: string;
-  user: User;
-}
+// Removed AuthResponse interface as it's no longer needed with Firebase Auth
 
 export interface TaskProgress {
   completed: number;

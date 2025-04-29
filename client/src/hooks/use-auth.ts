@@ -1,42 +1,89 @@
 import { useEffect, useState } from "react";
 import { User } from "@/lib/types";
 import { 
-  isAuthenticated, 
   getUser, 
+  saveUser,
+  clearAuth,
   login as authLogin, 
   logout as authLogout,
   register as authRegister
 } from "@/lib/auth";
 import { useLocation } from "wouter";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(getUser());
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    // Update user if auth state changes
-    setUser(getUser());
+    // Set up Firebase auth state change listener
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setLoading(true);
+      
+      if (firebaseUser) {
+        try {
+          // Get additional user data from Firestore
+          const userDocRef = doc(db, "users", firebaseUser.uid);
+          const userDoc = await getDoc(userDocRef);
+          
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            const userObj: User = {
+              id: firebaseUser.uid,
+              username: userData.username,
+              email: firebaseUser.email || "",
+              fullName: userData.fullName,
+              role: userData.role,
+              phone: userData.phone
+            };
+            
+            saveUser(userObj);
+            setUser(userObj);
+          } else {
+            // Handle case where user auth exists but no profile found
+            console.error("User authenticated but no profile found");
+            clearAuth();
+            setUser(null);
+          }
+        } catch (err) {
+          console.error("Error fetching user data:", err);
+          clearAuth();
+          setUser(null);
+        }
+      } else {
+        // Not authenticated
+        clearAuth();
+        setUser(null);
+      }
+      
+      setLoading(false);
+    });
+    
+    // Clean up subscription
+    return () => unsubscribe();
   }, []);
 
-  const login = async (username: string, password: string) => {
+  const login = async (email: string, password: string) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await authLogin(username, password);
-      setUser(response.user);
+      const user = await authLogin(email, password);
+      setUser(user);
       
       // Redirect based on user role
-      if (response.user.role === "player") {
+      if (user.role === "player") {
         setLocation("/player/booking");
-      } else if (response.user.role === "employee") {
+      } else if (user.role === "employee") {
         setLocation("/employee/dashboard");
-      } else if (response.user.role === "supervisor") {
+      } else if (user.role === "supervisor") {
         setLocation("/supervisor/dashboard");
       }
       
-      return response;
+      return user;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
       throw err;
@@ -56,9 +103,9 @@ export const useAuth = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await authRegister(userData);
+      const user = await authRegister(userData);
       setLocation("/login");
-      return response;
+      return user;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
       throw err;
@@ -67,20 +114,18 @@ export const useAuth = () => {
     }
   };
 
-  const logout = () => {
-    authLogout();
-    setUser(null);
-    setLocation("/login");
+  const logout = async () => {
+    try {
+      await authLogout();
+      setUser(null);
+      setLocation("/login");
+    } catch (err) {
+      console.error("Error during logout:", err);
+    }
   };
 
   const checkAuth = () => {
-    const authenticated = isAuthenticated();
-    if (!authenticated && user) {
-      setUser(null);
-    } else if (authenticated && !user) {
-      setUser(getUser());
-    }
-    return authenticated;
+    return !!auth.currentUser && !!user;
   };
 
   return {
