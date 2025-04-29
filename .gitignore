@@ -4,3 +4,21 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# Firebase environment files
+.env.development
+.env.production
+
+# Firebase configuration files
+firebase.json
+firestore.rules
+firestore.indexes.json
+
+# Firebase functions
+functions/node_modules
+functions/lib
+functions/.runtimeconfig.json
+
+# Flutter-related files (if applicable)
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
